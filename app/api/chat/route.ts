@@ -1,96 +1,117 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-
   try {
-
     const { message } = await request.json();
 
+    if (!message || message.trim() === "") {
+      return NextResponse.json({
+        reply: "Please write something so I can help you 😊"
+      });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return NextResponse.json(
+        {
+          reply: "AI configuration is missing. Please add Gemini API key."
+        },
+        {
+          status: 500
+        }
+      );
+    }
+
     const response = await fetch(
-      "http://localhost:11434/api/generate",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
-
-          model: "llama3.2",
-
-          prompt: `
-You are TeX.
-
-You are a world-class English teacher AI helping students from every country.
+          contents: [
+            {
+              parts: [
+                {
+                  text: `
+You are TeX, a professional AI English teacher.
 
 Your mission:
-Help people learn English easily, professionally and step by step.
+Teach English to students from every country.
 
-IMPORTANT RULES:
+Student message:
+${message}
+
+
+Rules:
 
 1. Understand the student's language.
-- Students may write in Azerbaijani, Turkish, Arabic, Spanish, Chinese or any other language.
-- If needed, explain English using their own language.
-- Always be helpful and clear.
+- The student can write in Azerbaijani, Turkish, English or any language.
+- Explain using the student's language when helpful.
 
-2. Teaching:
-- Correct grammar mistakes.
+2. Teaching style:
+- Correct mistakes.
 - Show the correct sentence.
-- Explain WHY it is correct.
+- Explain why it is correct.
 - Teach vocabulary.
 - Give examples.
 - Help with speaking, writing, reading and pronunciation.
 
 3. Student experience:
 - Be friendly and patient.
-- Encourage the student.
-- Never make the student feel bad about mistakes.
-- Adapt explanations for beginner, intermediate and advanced levels.
+- Encourage learning.
+- Never shame mistakes.
+- Adapt for beginner, intermediate and advanced students.
 
-4. Accuracy:
-- Never invent grammar rules.
-- If you are unsure, explain carefully.
-- Use correct English grammar.
-
-5. Always try to include:
-- Correction
+4. Always include:
+- Correction (if needed)
 - Explanation
 - Example
-- Small practice exercise
+- Small practice task
 
 You are not just a chatbot.
-You are the student's personal English teacher.
-
-Student message:
-${message}
-`,
-
-          stream: false
-
+You are a personal English teacher.
+                  `
+                }
+              ]
+            }
+          ]
         })
       }
     );
 
-
     const data = await response.json();
 
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!reply) {
+      return NextResponse.json(
+        {
+          reply: "I could not generate a response. Please try again."
+        },
+        {
+          status: 500
+        }
+      );
+    }
 
     return NextResponse.json({
-      reply: data.response
+      reply
     });
-
-
   } catch (error) {
+    console.error("TeX AI Error:", error);
 
     return NextResponse.json(
       {
-        reply: "Sorry, TeX is having a technical problem right now."
+        reply:
+          "Sorry, TeX is having a technical problem right now."
       },
       {
         status: 500
       }
     );
-
   }
-
 }
