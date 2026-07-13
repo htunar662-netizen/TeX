@@ -88,15 +88,17 @@ You are a personal English teacher.
       data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!reply) {
-      return NextResponse.json(
-        {
-          reply: "I could not generate a response. Please try again."
-        },
-        {
-          status: 500
-        }
-      );
+  console.log("Gemini full response:", JSON.stringify(data, null, 2));
+
+  return NextResponse.json(
+    {
+      reply: "Gemini did not return a response. Check API settings."
+    },
+    {
+      status: 500
     }
+  );
+}
 
     return NextResponse.json({
       reply
