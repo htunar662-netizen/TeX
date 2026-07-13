@@ -88,11 +88,12 @@ You are a personal English teacher.
       data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!reply) {
-  console.log("Gemini full response:", JSON.stringify(data, null, 2));
+  console.log("GEMINI ERROR RESPONSE:");
+  console.log(JSON.stringify(data, null, 2));
 
   return NextResponse.json(
     {
-      reply: "Gemini did not return a response. Check API settings."
+      reply: JSON.stringify(data)
     },
     {
       status: 500
